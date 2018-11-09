@@ -1,14 +1,14 @@
-#Shell Script Sample Problems
+##Shell Script Sample Problems
 
-#Problem 1 :
+##Problem 1 :
 
 Write a shell script script1.sh  that will prompt the user and receive two integers as input. The output will be "yes" only if one of the numbers is even and the other is odd. Otherwise, output will be "no".
 
-#Problem 2 :
+##Problem 2 :
 
 Write a shell script script2.sh  that will take integer numbers from the user until a zero is entered. The inputs can be both positive and negative. However, after a zero is entered, the output will be sum of all the positive numbers (ignoring the negative numbers) entered by the user.
 
-#Problem 3 :
+##Problem 3 :
 
 Write a shell script script3.sh that will take filenames as arguments and remove execute permission from the file, however only if the file is a regular file. The script must check to see that there is at least one argument, otherwise shows usage message for the script.
 
@@ -38,14 +38,14 @@ Now, if we give the following commands in turn, the output will be as follows:
        a is not a regular file.
 
 
-#Problem 4
+##Problem 4
 
 Write a shell script  script4.sh that will change the current working directory as shown in the following figure. Remember that, only files having extension .cpp should be renamed. And this should be done for all nested subdirectories also.
 
 In the following figure, the directory tree on the left is before running the script which after running script4.sh will be changed to the one on the right.
 
 
-#Problem 5:
+##Problem 5:
 
 Write a shell script script5.sh that will take a line number n and a string PATTERN as input and delete all the txt files in the directory which contains the string PATTERN in line n.
 For example, consider the following files:
@@ -72,7 +72,8 @@ then file2.txt and file3.txt will be deleted as both of them contain "for" in li
 script5.sh 2  "you"
 then file1.txt and file3.txt will be deleted.
 
-#Problem 6:
+##Problem 6:
+
 Write a shell script script6.sh that deletes all the files in the current directory that has at least one digit in its file name.
 Remember, you cannot delete any directory even if its name contains digit.
 
