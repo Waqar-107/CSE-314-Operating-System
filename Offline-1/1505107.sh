@@ -19,8 +19,8 @@ zips=$(find . -name \*\.zip -type f)
 #sed 's/whom you want to replace/substitute/g'
 studentID=$(cut CSE_322.csv -d ',' -f1|sed 's/"//g'|sed 's/	//g')
 studentName=$(cut CSE_322.csv -d ',' -f2)
-totalStudent=${#studentID[@]}
-echo "total : $totalStudent"
+totalStudent=145
+
 #using the csv make the absent list. every submission has name at first, compare ignoring the cases
 
 
@@ -67,6 +67,7 @@ do
         flag=0
         marks=0
         actual_id=0
+        extra=0
 
         for roll in $studentID
         do
@@ -91,6 +92,27 @@ do
             done
         fi
         #--------------------------------------------------
+
+        #--------------------------------------------------
+        #now we try to retrieve the studentID from the name of the zip
+        if [ $flag == 0 ]; then
+            for roll in $studentID
+            do
+                if [[ $file == *"$roll"* ]]; then
+                    flag=1
+                    actual_id=roll
+                fi
+            done
+        fi
+        #--------------------------------------------------
+
+        #--------------------------------------------------
+        #now we try to retrieve the studentID using the studentName written in the zip and the csv
+        #if two or more have same name then check if someone has already been processed
+        #if we can't determine the person then this guy will go to 'extra' folder
+        if [ $flag == 0 ]; then
+        fi
+
 
     fi
     #---------------------------------------------------------------------
