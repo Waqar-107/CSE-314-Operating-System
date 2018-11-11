@@ -291,8 +291,8 @@ do
     #---------------------------------------------------------------------
 
     #work done remove the temporary file
+    cd ..
     rm temporary_folder
-    rm $file
 
 done
 
@@ -303,6 +303,11 @@ do
     fi
 
     echo "${studentID[$i]} : ${marks[$i]}" >> marks.txt
+done
+
+for file in ${zips[@]}
+do
+    rm -r $file
 done
 #--------------------------------------------------------------------------------------------------
 
