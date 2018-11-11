@@ -6,6 +6,10 @@ IFS=$'\n'
 
 echo -n "started executing the script"
 
+#open absent list and marks file
+touch absent.txt
+touch marks.txt
+
 #unzip the file where all the submission are
 unzip "submissionsAll.zip"
 
@@ -13,24 +17,61 @@ unzip "submissionsAll.zip"
 rm -r submissionsAll.zip
 
 #get all the zips
-zips=$(find . -name \*\.zip -type f)
+temp=$(find . -name \*\.zip -type f)
+idx=0
+for i in $temp
+do
+    zips[idx]=$i
+    idx=`expr $idx + 1`
+done
 
 #read the csv
 #sed 's/whom you want to replace/substitute/g'
-studentID=$(cut CSE_322.csv -d ',' -f1|sed 's/"//g'|sed 's/	//g')
-studentName=$(cut CSE_322.csv -d ',' -f2)
-totalStudent=145
+temp=$(cut CSE_322.csv -d ',' -f1|sed 's/"//g'|sed 's/	//g')
+idx=0
+for i in $temp
+do
+    studentID[idx]=$i
+    idx=`expr $idx + 1`
+done
 
-#using the csv make the absent list. every submission has name at first, compare ignoring the cases
+temp=$(cut CSE_322.csv -d ',' -f2)
+idx=0
+for i in $temp
+do
+    studentName[idx]=$i
+    idx=`expr $idx + 1`
+done
 
+totalStudent=${#studentID[@]}
 
+#--------------------------------------------------------------------------------------------------
+#using the csv make the absent list.
+for((i=0;i<145;i++))
+do
+    tempList[i]=-1
+done
+
+for roll in $studentID
+do
+    for file in $(ls)
+    do
+
+    done
+done
+
+#--------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------
 #make a new directory "output" and inside it another directory called "extra"
 mkdir output
 cd output
 mkdir extra
 cd ..
+#--------------------------------------------------------------------------------------------------
 
-for file in $zips
+#--------------------------------------------------------------------------------------------------
+for file in ${zips[@]}
 do 
     #unzip in a temporary file in a new folder called temp
     unzip -d temp/ $file
@@ -69,12 +110,13 @@ do
         actual_id=0
         extra=0
 
-        for roll in $studentID
+        for roll in ${studentID[@]}
         do
             if [ $roll == $dirName ]; then
                 flag=1
                 marks=10
-                actual_id=$roll;
+                actual_id=$roll
+                break
             fi
         done
         #--------------------------------------------------
@@ -82,12 +124,13 @@ do
         #--------------------------------------------------
         #check if it has studentID inside the string like-> 1405001_cse322
         if [ $flag == 0 ]; then
-            for roll in $studentID
+            for roll in ${studentID[@]}
             do
                 if [[ $dirName == *"$roll"* ]]; then
                     flag=1
                     marks=5
                     actual_id=roll
+                    break
                 fi
             done
         fi
@@ -96,11 +139,12 @@ do
         #--------------------------------------------------
         #now we try to retrieve the studentID from the name of the zip
         if [ $flag == 0 ]; then
-            for roll in $studentID
+            for roll in ${studentID[@]}
             do
                 if [[ $file == *"$roll"* ]]; then
                     flag=1
                     actual_id=roll
+                    break
                 fi
             done
         fi
@@ -121,3 +165,26 @@ do
     rm temp
 
 done
+#--------------------------------------------------------------------------------------------------
+
+
+
+#important basics- declare, assign, print in array
+#idx=0
+#for((i=0;i<145;i++))
+#do
+#    tempList[i]=$idx
+#    idx=`expr $idx + 1`
+#done
+#--------------------------------------------------------------------------------------------------
+
+#idx=0
+#while [ $idx -lt ${#tempList[@]} ]
+#do
+#    echo ${tempList[$idx]}
+#    idx=`expr $idx + 1`
+#done
+#for((i=0;i<$totalStudent;i++))
+#do
+#echo ${studentID[$i]}, ${studentName[i]}
+#done
