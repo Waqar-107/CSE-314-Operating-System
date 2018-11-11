@@ -46,13 +46,13 @@ done
 totalStudent=${#studentID[@]}
 
 #--------------------------------------------------------------------------------------------------
-#using the csv make the absent list.
-for((i=0;i<145;i++))
+#whenever one is determined presented he would be 1
+for((i=0;i<$totalStudent;i++))
 do
     present[i]=0
+    marks[i]=0
 done
 
-#see if roll can be found
 idx=0
 for roll in ${studentID[@]}
 do
@@ -63,34 +63,6 @@ do
             break
         fi
     done
-
-    idx=`expr $idx + 1`
-done
-
-#check if roll can be retrieved from name
-idx=0
-for name in ${studentName[@]}
-do
-    #converted to uppercase
-    tname=${name^^}
-
-    for file in ${zips[@]}
-    do
-        tfile=${file^^}
-        if [[ *"$tname"* == $tfile ]]; then
-            present[idx]=1
-            break
-        fi
-    done
-done
-
-#if not present then put it in absent list
-idx=0
-for roll in ${studentID[@]}
-do
-    if [ ${present[$idx]} == 0 ]; then
-        echo $roll >> absent.txt
-    fi
     idx=`expr $idx + 1`
 done
 #--------------------------------------------------------------------------------------------------
@@ -107,9 +79,9 @@ cd ..
 for file in ${zips[@]}
 do 
     #unzip in a temporary file in a new folder called temp
-    unzip -d temp/ $file
+    unzip -d temporary_folder/ $file
     
-    cd temp
+    cd temporary_folder
 
     #check number of directories in temp
     #noOfDirectory=$(*/ | wc -w) not working
@@ -139,7 +111,7 @@ do
         #check if it is in the csv
         #first check if it is in format-> 1405001
         flag=0
-        marks=0
+        tmarks=0
         actual_id=0
         extra=0
 
@@ -147,7 +119,7 @@ do
         do
             if [ $roll == $dirName ]; then
                 flag=1
-                marks=10
+                tmarks=10
                 actual_id=$roll
                 break
             fi
@@ -161,8 +133,8 @@ do
             do
                 if [[ $dirName == *"$roll"* ]]; then
                     flag=1
-                    marks=5
-                    actual_id=roll
+                    tmarks=5
+                    actual_id=$roll
                     break
                 fi
             done
@@ -176,7 +148,7 @@ do
             do
                 if [[ $file == *"$roll"* ]]; then
                     flag=1
-                    actual_id=roll
+                    actual_id=$roll
                     break
                 fi
             done
@@ -185,18 +157,152 @@ do
 
         #--------------------------------------------------
         #now we try to retrieve the studentID using the studentName written in the zip and the csv
-        #if two or more have same name then check if someone has already been processed
-        #if we can't determine the person then this guy will go to 'extra' folder
+        #if two or more un-determined people have this name then not possible to determine
         if [ $flag == 0 ]; then
+
+            #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
+            cnt=0
+            troll=-1
+            tname=${file^^}
+
+            for((i=0;i<$totalStudent;i++))
+            do
+                tname2=${studentName[$i]}
+                tname2=${tname2^^}
+
+                #if absent count, if possible to determine then cnt will be 1
+                if [ ${present[$i]} == 0 ]; then
+                    if [[ tname == *"$tname2"* ]]; then
+                        troll=${studentID[$i]}
+                        cnt=`expr $cnt + 1`
+                    fi
+                fi
+            done
+
+            if [ $cnt == 1 ]; then
+                actual_id=$troll
+                flag=1
+            fi
         fi
 
+        #if flag is 1 then move to output folder, else in extra folder
+        if [ $flag == 1 ]; then
+            for((i=0;i<$totalStudent;i++))
+            do
+                if [ ${studentID[$i]} == $actual_id ]; then
+                    marks[i]=$tmarks
+                    present[i]=1
+                    break
+                fi
+            done
 
+            #first rename
+            mv $dirName $actual_id
+
+            #move
+            mv * ../output
+        else
+            mv * ../output/extra
+        fi
+        #---------------------------------------------------------------------
+    else
+        #---------------------------------------------------------------------
+        #more than one directory, same as the last stage of if 
+        #--------------------------------------------------
+        #now we try to retrieve the studentID from the name of the zip
+        flag=0
+        if [ $flag == 0 ]; then
+            for roll in ${studentID[@]}
+            do
+                if [[ $file == *"$roll"* ]]; then
+                    flag=1
+                    actual_id=$roll
+                    break
+                fi
+            done
+        fi
+        #--------------------------------------------------
+
+        #--------------------------------------------------
+        #now we try to retrieve the studentID using the studentName written in the zip and the csv
+        #if two or more un-determined people have this name then not possible to determine
+        if [ $flag == 0 ]; then
+
+            #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
+            cnt=0
+            troll=-1
+            tname=${file^^}
+
+            for((i=0;i<$totalStudent;i++))
+            do
+                tname2=${studentName[$i]}
+                tname2=${tname2^^}
+
+                #if absent count, if possible to determine then cnt will be 1
+                if [ ${present[$i]} == 0 ]; then
+                    if [[ tname == *"$tname2"* ]]; then
+                        troll=${studentID[$i]}
+                        cnt=`expr $cnt + 1`
+                    fi
+                fi
+            done
+
+            if [ $cnt == 1 ]; then
+                actual_id=$troll
+                flag=1
+            fi
+        fi
+
+        #if flag is 1 then move to output folder, else in extra folder but first copy everything in a folder
+        if [ $flag == 1 ]; then
+            for((i=0;i<$totalStudent;i++))
+            do
+                if [ ${studentID[$i]} == $actual_id ]; then
+                    present[i]=1
+                    break
+                fi
+            done
+
+            #first create a folder
+            mkdir $actual_id
+            for file2 in $(ls)
+            do
+                if [[ $file2 != $actual_id ]]; then
+                    mv $file2 $actual_id
+                fi
+            done
+
+            #move
+            mv * ../output
+        else
+            #first create a folder having the same name as the zip
+
+            temp_name=$file+" extra"
+            mkdir $temp_name
+            for file2 in $(ls)
+            do
+                if [[ $file2 != $file ]]; then
+                    mv $file2 $temp_name
+                fi
+            done
+            mv * ../output/extra
+        fi
     fi
     #---------------------------------------------------------------------
-    
-    #work done remove the temporary file
-    rm temp
 
+    #work done remove the temporary file
+    rm temporary_folder
+    rm $file
+
+done
+
+for((i=0;i<$totalStudent;i++))
+do
+    if [ ${present[$i]} == 0 ]; then
+    echo ${studentID[$i]} >> absent.txt
+    fi
+
+    echo "${studentID[$i]} : ${marks[$i]}" >> marks.txt
 done
 #--------------------------------------------------------------------------------------------------
 
@@ -221,3 +327,4 @@ done
 #do
 #echo ${studentID[$i]}, ${studentName[i]}
 #done
+#str=${str^^}
