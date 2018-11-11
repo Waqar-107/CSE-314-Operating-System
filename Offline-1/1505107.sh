@@ -49,17 +49,50 @@ totalStudent=${#studentID[@]}
 #using the csv make the absent list.
 for((i=0;i<145;i++))
 do
-    tempList[i]=-1
+    present[i]=0
 done
 
-for roll in $studentID
+#see if roll can be found
+idx=0
+for roll in ${studentID[@]}
 do
-    for file in $(ls)
+    for file in ${zips[@]}
     do
+        if [[ $file == *"$roll"* ]]; then
+            present[idx]=1
+            break
+        fi
+    done
 
+    idx=`expr $idx + 1`
+done
+
+#check if roll can be retrieved from name
+idx=0
+for name in ${studentName[@]}
+do
+    #converted to uppercase
+    tname=${name^^}
+
+    for file in ${zips[@]}
+    do
+        tfile=${file^^}
+        if [[ *"$tname"* == $tfile ]]; then
+            present[idx]=1
+            break
+        fi
     done
 done
 
+#if not present then put it in absent list
+idx=0
+for roll in ${studentID[@]}
+do
+    if [ ${present[$idx]} == 0 ]; then
+        echo $roll >> absent.txt
+    fi
+    idx=`expr $idx + 1`
+done
 #--------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------
