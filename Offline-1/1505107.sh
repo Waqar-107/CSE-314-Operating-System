@@ -4,17 +4,18 @@
 #https://unix.stackexchange.com/questions/9496/looping-through-files-with-spaces-in-the-names
 IFS=$'\n'
 
-echo -n "started executing the script"
+echo "started executing the script"
+echo
 
 #open absent list and marks file
 touch absent.txt
 touch marks.txt
 
 #unzip the file where all the submission are
-unzip "submissionsAll.zip"
+unzip SubmissionsAll.zip
 
 #delete the zip
-rm -r submissionsAll.zip
+rm -r SubmissionsAll.zip
 
 #get all the zips
 temp=$(find . -name \*\.zip -type f)
@@ -89,9 +90,7 @@ do
     noOfDirectory=0
     for file2 in $(ls)
     do
-        if [ -d $file2 ]; then
-            noOfDirectory=`expr $noOfDirectory + 1`
-        fi
+        noOfDirectory=`expr $noOfDirectory + 1`
     done
 
     #---------------------------------------------------------------------
@@ -196,8 +195,10 @@ do
                 fi
             done
 
-            #first rename
-            mv $dirName $actual_id
+            #first rename if necessary
+            if [[ $dirName != $actual_id ]]; then
+                mv $dirName $actual_id
+            fi
 
             #move
             mv * ../output
@@ -210,17 +211,14 @@ do
         #more than one directory, same as the last stage of if 
         #--------------------------------------------------
         #now we try to retrieve the studentID from the name of the zip
-        flag=0
-        if [ $flag == 0 ]; then
-            for roll in ${studentID[@]}
-            do
-                if [[ $file == *"$roll"* ]]; then
-                    flag=1
-                    actual_id=$roll
-                    break
-                fi
-            done
-        fi
+        for roll in ${studentID[@]}
+        do
+            if [[ $file == *"$roll"* ]]; then
+                flag=1
+                actual_id=$roll
+                break
+            fi
+        done
         #--------------------------------------------------
 
         #--------------------------------------------------
@@ -292,8 +290,7 @@ do
 
     #work done remove the temporary file
     cd ..
-    rm temporary_folder
-
+    rm -r temporary_folder
 done
 
 for((i=0;i<$totalStudent;i++))
@@ -310,26 +307,3 @@ do
     rm -r $file
 done
 #--------------------------------------------------------------------------------------------------
-
-
-
-#important basics- declare, assign, print in array
-#idx=0
-#for((i=0;i<145;i++))
-#do
-#    tempList[i]=$idx
-#    idx=`expr $idx + 1`
-#done
-#--------------------------------------------------------------------------------------------------
-
-#idx=0
-#while [ $idx -lt ${#tempList[@]} ]
-#do
-#    echo ${tempList[$idx]}
-#    idx=`expr $idx + 1`
-#done
-#for((i=0;i<$totalStudent;i++))
-#do
-#echo ${studentID[$i]}, ${studentName[i]}
-#done
-#str=${str^^}
