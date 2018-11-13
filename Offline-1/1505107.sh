@@ -7,16 +7,23 @@ IFS=$'\n'
 echo "started executing the script"
 echo
 
+#--------------------------------------------------------------------------------------------------
 #open absent list and marks file
 touch absent.txt
 touch marks.txt
+#--------------------------------------------------------------------------------------------------
 
+
+#--------------------------------------------------------------------------------------------------
 #unzip the file where all the submission are
 unzip SubmissionsAll.zip
 
 #delete the zip
 rm -r SubmissionsAll.zip
+#--------------------------------------------------------------------------------------------------
 
+
+#--------------------------------------------------------------------------------------------------
 #get all the zips
 temp=$(find . -name \*\.zip -type f)
 idx=0
@@ -45,9 +52,11 @@ do
 done
 
 totalStudent=${#studentID[@]}
+#--------------------------------------------------------------------------------------------------
+
 
 #--------------------------------------------------------------------------------------------------
-#whenever one is determined presented he would be 1
+#whenever a roll is found in the files, he is considered as present
 for((i=0;i<$totalStudent;i++))
 do
     present[i]=0
@@ -68,6 +77,7 @@ do
 done
 #--------------------------------------------------------------------------------------------------
 
+
 #--------------------------------------------------------------------------------------------------
 #make a new directory "output" and inside it another directory called "extra"
 mkdir output
@@ -76,7 +86,9 @@ mkdir extra
 cd ..
 #--------------------------------------------------------------------------------------------------
 
+
 #--------------------------------------------------------------------------------------------------
+#for all the submissions-
 for file in ${zips[@]}
 do 
     #unzip in a temporary file in a new folder called temp
@@ -162,16 +174,17 @@ do
             #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
             cnt=0
             troll=-1
-            tname=${file^^}
+            zname=$file
+            zname=${zname^^}
 
             for((i=0;i<$totalStudent;i++))
             do
-                tname2=${studentName[$i]}
-                tname2=${tname2^^}
+                csv_name=${studentName[$i]}
+                csv_name=${csv_name^^}
 
-                #if absent count, if possible to determine then cnt will be 1
+                #if absent then check for ambiguity
                 if [ ${present[$i]} == 0 ]; then
-                    if [[ tname == *"$tname2"* ]]; then
+                    if [[ $zname == *"$csv_name"* ]]; then
                         troll=${studentID[$i]}
                         cnt=`expr $cnt + 1`
                     fi
@@ -229,16 +242,17 @@ do
             #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
             cnt=0
             troll=-1
-            tname=${file^^}
+            tzname=$file
+            zname=${zname^^}
 
             for((i=0;i<$totalStudent;i++))
             do
-                tname2=${studentName[$i]}
-                tname2=${tname2^^}
+                csv_name=${studentName[$i]}
+                csv_name=${csv_name^^}
 
-                #if absent count, if possible to determine then cnt will be 1
+                #if absent then check for ambiguity
                 if [ ${present[$i]} == 0 ]; then
-                    if [[ tname == *"$tname2"* ]]; then
+                    if [[ $zname == *"$csv_name"* ]]; then
                         troll=${studentID[$i]}
                         cnt=`expr $cnt + 1`
                     fi
@@ -275,11 +289,11 @@ do
         else
             #first create a folder having the same name as the zip
 
-            temp_name=$file+" extra"
+            temp_name=$file
             mkdir $temp_name
             for file2 in $(ls)
             do
-                if [[ $file2 != $file ]]; then
+                if [[ $file2 != $file ]] && [[ $file2 != $temp_name ]]; then
                     mv $file2 $temp_name
                 fi
             done
@@ -293,6 +307,9 @@ do
     rm -r temporary_folder
 done
 
+
+#------------------------------
+#print the absent list and marks list
 for((i=0;i<$totalStudent;i++))
 do
     if [ ${present[$i]} == 0 ]; then
@@ -301,7 +318,11 @@ do
 
     echo "${studentID[$i]} : ${marks[$i]}" >> marks.txt
 done
+#------------------------------
 
+
+#------------------------------
+#remove all the submissions
 for file in ${zips[@]}
 do
     rm -r $file
