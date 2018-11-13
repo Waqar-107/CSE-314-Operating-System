@@ -174,17 +174,23 @@ do
             #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
             cnt=0
             troll=-1
+
+            #here we extracted the zip files name
             zname=$file
+            zname=$(echo $zname|cut -d '_' -f 1)
+            zname=${zname:2}
             zname=${zname^^}
 
             for((i=0;i<$totalStudent;i++))
             do
-                csv_name=${studentName[$i]}
-                csv_name=${csv_name^^}
+                csvName=${studentName[$i]}
+                csvName=${csvName^^}
 
                 #if absent then check for ambiguity
+                #here the name from csv may have some space or other char that can't be seen
+                #so i used =~ instead of ==
                 if [ ${present[$i]} == 0 ]; then
-                    if [[ $zname == *"$csv_name"* ]]; then
+                    if [[ $zname =~ $csvName ]] || [[ $csvName =~ $zname ]]; then
                         troll=${studentID[$i]}
                         cnt=`expr $cnt + 1`
                     fi
@@ -216,6 +222,9 @@ do
             #move
             mv * ../output
         else
+            temp_name=$file+" extra"
+            
+            mv * $temp_name
             mv * ../output/extra
         fi
         #---------------------------------------------------------------------
@@ -242,17 +251,23 @@ do
             #tname is the name in zip files name. adding sum char to the original name from csv(which is tname2 now) will result in tname
             cnt=0
             troll=-1
-            tzname=$file
+            
+            #here we extracted the zip files name
+            zname=$file
+            zname=$(echo $zname|cut -d '_' -f 1)
+            zname=${zname:2}
             zname=${zname^^}
 
             for((i=0;i<$totalStudent;i++))
             do
-                csv_name=${studentName[$i]}
-                csv_name=${csv_name^^}
+                csvName=${studentName[$i]}
+                csvName=${csvName^^}
 
                 #if absent then check for ambiguity
+                #here the name from csv may have some space or other char that can't be seen
+                #so i used =~ instead of ==
                 if [ ${present[$i]} == 0 ]; then
-                    if [[ $zname == *"$csv_name"* ]]; then
+                    if [[ $zname =~ $csvName ]] || [[ $csvName =~ $zname ]]; then
                         troll=${studentID[$i]}
                         cnt=`expr $cnt + 1`
                     fi
@@ -289,7 +304,7 @@ do
         else
             #first create a folder having the same name as the zip
 
-            temp_name=$file
+            temp_name=$file+" extra"
             mkdir $temp_name
             for file2 in $(ls)
             do
