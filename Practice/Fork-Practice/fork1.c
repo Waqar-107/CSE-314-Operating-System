@@ -5,10 +5,12 @@
 
 int main()
 {
-    int pid;
+    pid_t pid;
     printf("hello os!!!\n");
 
     pid = fork();
+
+    printf("pid : %d\n", pid);
 
     if(pid == -1)
         printf("error in process creation\n");
@@ -16,7 +18,7 @@ int main()
     else if(pid == 0)
         printf("child\n");
 
-    else if(pid == 0)
+    else
         printf("parent\n");
 
     return 0;
