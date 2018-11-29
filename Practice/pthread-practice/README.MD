@@ -13,7 +13,9 @@ here SCHED_RR is defined as 2 and stands for round robin scheduler
 
 # sem_post(&semaphore_var) sem_value++
 
-#sem_init(&a semaphore var, 0, initial value for sem) 
+# sem_init(&a semaphore var, 0, initial value for sem) 
 
 0 means semaphore is local to the calling process
+
+# pthread_mutex_init(&pthread_mutex_t var, attr-> 0 or null)
 
