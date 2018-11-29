@@ -5,6 +5,7 @@
 #include<queue>
 #include<semaphore.h>
 #include<stdio.h>
+#include<string>
 #include<unistd.h>
 
 #define chocolateCake 1
@@ -20,7 +21,7 @@ queue<int> cakeQ;
 sem_t cakeFull, cakeEmpty;
 sem_t vanillaFull, chocolateFull, vanillaEmpty, chocolateEmpty;
 
-pthread_mutex_t lock;
+pthread_mutex_t lock, consoleLock;
 
 void init_semaphore()
 {
@@ -34,26 +35,37 @@ void init_semaphore()
     sem_init(&chocolateEmpty, 0, 5);
 
     pthread_mutex_init(&lock, 0);
+    pthread_mutex_init(&consoleLock, 0);
+}
+
+void pfs(string str)
+{
+    pthread_mutex_lock(&consoleLock);
+    cout << str;
+    pthread_mutex_unlock(&consoleLock);
 }
 
 void *chef_x(void *arg)
 {
     while(1)
     {
-        sleep(1);
+        usleep(600);
         
         //queue locked
-        printf("chef x is in a cofee-break\n");
+        pfs("chef x is in a tea-break\n");
         pthread_mutex_lock(&lock);    
 
         //emptiness decreases by one
-        printf("chef x is in a cofee-break\n");
+        pfs("chef x is in a tea-break\n");
         sem_wait(&cakeEmpty);   
 
-        printf("chef x in critical region\n");
+        pfs("chef x in critical region\n");
         
         cakeQ.push(chocolateCake);
-        printf("chef x produced a vanilla-cake and leaving critical region\nqueue size: %d", cake.size());
+        
+        pthread_mutex_lock(&consoleLock);
+        printf("chef x produced a chocolate-cake and leaving critical region. queue size: %d\n", (int)cakeQ.size());
+        pthread_mutex_unlock(&consoleLock);
 
         //amount of cake increases by one
         sem_post(&cakeFull);
@@ -67,20 +79,23 @@ void *chef_y(void *arg)
 {
     while(1)
     {
-        sleep(2);
+        usleep(700);
         
         //queue locked
-        printf("chef y is in a cofee-break\n");
+        pfs("chef y is in a tea-break\n");
         pthread_mutex_lock(&lock);    
 
         //emptiness decreases by one
-        printf("chef y is in a cofee-break\n");
+        pfs("chef y is in a tea-break\n");
         sem_wait(&cakeEmpty);   
 
-        printf("chef y in critical region\n");
+        pfs("chef y in critical region\n");
         
         cakeQ.push(chocolateCake);
-        printf("chef y produced a vanilla-cake and leaving critical region\nqueue size: %d", cake.size());
+        
+        pthread_mutex_lock(&consoleLock);
+        printf("chef y produced a vanilla-cake and leaving critical region. queue size: %d\n", (int)cakeQ.size());
+        pthread_mutex_unlock(&consoleLock);
 
         //amount of cake increases by one
         sem_post(&cakeFull);
