@@ -155,14 +155,49 @@ void *chef_z(void *arg)
     }
 }
 
+//delivers chocolate cake
 void *waiter_1(void *arg)
 {
-   
+   while(1)
+   {
+       //wait till the queue has at-least one
+       sem_wait(&chocolateFull);
+
+       pfs("waiter-1 is in critical region\n");
+
+       chocolateQ.pop();
+       
+       pthread_mutex_lock(&consoleLock);
+       printf("waiter-1 delivered a chocolate-cake and leaving critical region. cake-queue size:%d. chocolate-queue size: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size());
+       pthread_mutex_unlock(&consoleLock);
+
+       //a slot in the queue is free 
+       sem_post(&chocolateEmpty);
+
+       sleep((rand() % 5) + 1);
+   }
 }
 
 void *waiter_2(void *arg)
 {
+    while(1)
+    {
+       //wait till the queue has at-least one
+       sem_wait(&vanillaFull);
 
+       pfs("waiter-2 is in critical region\n");
+
+       vanillaQ.pop();
+       
+       pthread_mutex_lock(&consoleLock);
+       printf("waiter-2 delivered a vanilla-cake and leaving critical region. cake-queue size:%d. vanilla-queue size: %d\n\n", (int)cakeQ.size(), (int)vanillaQ.size());
+       pthread_mutex_unlock(&consoleLock);
+
+       //a slot in the queue is free 
+       sem_post(&chocolateEmpty);
+
+       sleep((rand() % 5) + 1);
+    }
 }
 
 int main()
