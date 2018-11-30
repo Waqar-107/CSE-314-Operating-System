@@ -1,4 +1,4 @@
-/*** from dust i have come dust i will be ***/
+/*** from dust i have come, dust i will be ***/
 
 #include<iostream>
 #include<pthread.h>
@@ -23,6 +23,7 @@ sem_t vanillaFull, chocolateFull, vanillaEmpty, chocolateEmpty;
 
 pthread_mutex_t lock, consoleLock;
 
+//initialize the semaphore for three queues and two locks
 void init_semaphore()
 {
     sem_init(&cakeFull, 0, 0);
@@ -41,7 +42,7 @@ void init_semaphore()
 void pfs(string str)
 {
     pthread_mutex_lock(&consoleLock);
-    cout << str;
+    printf("%s", str.c_str());
     pthread_mutex_unlock(&consoleLock);
 }
 
@@ -49,29 +50,29 @@ void *chef_x(void *arg)
 {
     while(1)
     {
-        usleep(600);
-        
+        //emptiness decreases by one -> if not zero that means we can push into it
+        pfs("\nchef x is in a tea-break\n");
+        sem_wait(&cakeEmpty);   
+
         //queue locked
         pfs("chef x is in a tea-break\n");
-        pthread_mutex_lock(&lock);    
-
-        //emptiness decreases by one
-        pfs("chef x is in a tea-break\n");
-        sem_wait(&cakeEmpty);   
+        pthread_mutex_lock(&lock);
 
         pfs("chef x in critical region\n");
         
         cakeQ.push(chocolateCake);
         
         pthread_mutex_lock(&consoleLock);
-        printf("chef x produced a chocolate-cake and leaving critical region. queue size: %d\n", (int)cakeQ.size());
+        printf("chef x produced a chocolate-cake and leaving critical region. queue size: %d\n\n", (int)cakeQ.size());
         pthread_mutex_unlock(&consoleLock);
+
+        //unlock queue 
+        pthread_mutex_unlock(&lock);
 
         //amount of cake increases by one
         sem_post(&cakeFull);
 
-        //unlock queue 
-        pthread_mutex_unlock(&lock);
+        sleep((rand() % 5) + 1);
     }
 }
 
@@ -79,40 +80,84 @@ void *chef_y(void *arg)
 {
     while(1)
     {
-        usleep(700);
-        
-        //queue locked
-        pfs("chef y is in a tea-break\n");
-        pthread_mutex_lock(&lock);    
-
         //emptiness decreases by one
-        pfs("chef y is in a tea-break\n");
+        //if not zero that means we can push into it
+        pfs("\nchef y is in a tea-break\n");
         sem_wait(&cakeEmpty);   
+
+         //queue locked
+        pfs("chef y is in a tea-break\n");
+        pthread_mutex_lock(&lock); 
 
         pfs("chef y in critical region\n");
         
-        cakeQ.push(chocolateCake);
+        cakeQ.push(vanillaCake);
         
         pthread_mutex_lock(&consoleLock);
-        printf("chef y produced a vanilla-cake and leaving critical region. queue size: %d\n", (int)cakeQ.size());
+        printf("chef y produced a vanilla-cake and leaving critical region. queue size: %d\n\n", (int)cakeQ.size());
         pthread_mutex_unlock(&consoleLock);
+
+        //unlock queue 
+        pthread_mutex_unlock(&lock);
 
         //amount of cake increases by one
         sem_post(&cakeFull);
 
-        //unlock queue 
-        pthread_mutex_unlock(&lock);
+        sleep((rand() % 5) + 1);
     }
 }
 
 void *chef_z(void *arg)
 {
+    while(1)
+    {
+        //wait for the queue to be full
+        pfs("\nchef z is in a cofee-break\n");
+        sem_wait(&cakeFull);
 
+        pfs("chef z in critical range\n");
+
+        if(cakeQ.front() == chocolateCake)
+        {
+            //wait until you can push into the chocolate-cake queue
+            sem_wait(&chocolateEmpty);
+        
+            cakeQ.pop();
+            chocolateQ.push(chocolateCake);
+
+            pthread_mutex_lock(&consoleLock);
+            printf("chef z decorated a chocolate-cake and leaving critical region. cake-queue size:%d. chocolate-queue size: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size());
+            pthread_mutex_unlock(&consoleLock);
+
+            //chocolate queue can be popped now
+            sem_post(&chocolateFull);
+        }
+
+        else
+        {
+            //wait until you can push into the vanilla-cake queue
+            sem_wait(&vanillaEmpty);
+            
+            cakeQ.pop();
+            vanillaQ.push(vanillaCake);
+
+            pthread_mutex_lock(&consoleLock);
+            printf("chef z decorated a vanilla-cake and leaving critical region. cake-queue size: %d. vanilla-queue size: %d\n\n", (int)cakeQ.size(), (int)vanillaQ.size());
+            pthread_mutex_unlock(&consoleLock);
+
+            //vanilla queue can be popped now
+            sem_post(&vanillaFull);
+        }
+
+        //another slot in the queue is free
+        sem_post(&cakeEmpty);
+        sleep((rand() % 5) + 1);
+    }
 }
 
 void *waiter_1(void *arg)
 {
-
+   
 }
 
 void *waiter_2(void *arg)
@@ -122,6 +167,7 @@ void *waiter_2(void *arg)
 
 int main()
 {
+    srand(time(NULL));
     init_semaphore();
 
     pthread_t chefX, chefY, chefZ;
