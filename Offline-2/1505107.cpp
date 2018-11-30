@@ -120,7 +120,6 @@ void *chef_z(void *arg)
         if(cakeQ.front() == chocolateCake)
         {
             //wait until you can push into the chocolate-cake queue
-            pfs("stuck in reverse ch\n");
             sem_wait(&chocolateEmpty);
         
             cakeQ.pop();
@@ -136,7 +135,6 @@ void *chef_z(void *arg)
 
         else
         {
-            pfs("stuck in reverse van\n");
             //wait until you can push into the vanilla-cake queue
             sem_wait(&vanillaEmpty);
             
@@ -162,21 +160,22 @@ void *waiter_1(void *arg)
 {
    while(1)
    {
-       //wait till the queue has at-least one
-       sem_wait(&chocolateFull);
+        //wait till the queue has at-least one
+        pfs("waiter-1 is in a cofee-break\n");
+        sem_wait(&chocolateFull);
 
-       pfs("waiter-1 is in critical region\n");
+        pfs("waiter-1 is in critical region\n");
 
-       chocolateQ.pop();
+        chocolateQ.pop();
        
-       pthread_mutex_lock(&consoleLock);
-       printf("waiter-1 delivered a chocolate-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
-       pthread_mutex_unlock(&consoleLock);
+        pthread_mutex_lock(&consoleLock);
+        printf("waiter-1 delivered a chocolate-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
+        pthread_mutex_unlock(&consoleLock);
 
-       //a slot in the queue is free 
-       sem_post(&chocolateEmpty);
+        //a slot in the queue is free 
+        sem_post(&chocolateEmpty);
 
-       sleep(1);
+        sleep(1);
    }
 }
 
@@ -184,21 +183,22 @@ void *waiter_2(void *arg)
 {
     while(1)
     {
-       //wait till the queue has at-least one
-       sem_wait(&vanillaFull);
+        //wait till the queue has at-least one
+        pfs("waiter-2 is in a cofee-break");
+        sem_wait(&vanillaFull);
 
-       pfs("waiter-2 is in critical region\n");
+        pfs("waiter-2 is in critical region\n");
 
-       vanillaQ.pop();
-       
-       pthread_mutex_lock(&consoleLock);
-       printf("waiter-2 delivered a vanilla-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
-       pthread_mutex_unlock(&consoleLock);
+        vanillaQ.pop();
+        
+        pthread_mutex_lock(&consoleLock);
+        printf("waiter-2 delivered a vanilla-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
+        pthread_mutex_unlock(&consoleLock);
 
-       //a slot in the queue is free 
-       sem_post(&vanillaEmpty);
+        //a slot in the queue is free 
+        sem_post(&vanillaEmpty);
 
-       sleep(1);
+        sleep(1);
     }
 }
 
@@ -211,10 +211,10 @@ int main()
     pthread_t waiter1, waiter2;
 
     pthread_create(&chefX, NULL, chef_x, NULL);
-    pthread_create(&chefX, NULL, chef_y, NULL);
-    pthread_create(&chefX, NULL, chef_z, NULL);
-    pthread_create(&chefX, NULL, waiter_1, NULL);
-    pthread_create(&chefX, NULL, waiter_2, NULL);
+    pthread_create(&chefY, NULL, chef_y, NULL);
+    pthread_create(&chefZ, NULL, chef_z, NULL);
+    pthread_create(&waiter1, NULL, waiter_1, NULL);
+    pthread_create(&waiter2, NULL, waiter_2, NULL);
 
     while(true);
 
