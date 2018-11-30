@@ -63,7 +63,7 @@ void *chef_x(void *arg)
         cakeQ.push(chocolateCake);
         
         pthread_mutex_lock(&consoleLock);
-        printf("chef x produced a chocolate-cake and leaving critical region. queue size: %d\n\n", (int)cakeQ.size());
+        printf("chef x produced a chocolate-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
         pthread_mutex_unlock(&consoleLock);
 
         //unlock queue 
@@ -94,7 +94,7 @@ void *chef_y(void *arg)
         cakeQ.push(vanillaCake);
         
         pthread_mutex_lock(&consoleLock);
-        printf("chef y produced a vanilla-cake and leaving critical region. queue size: %d\n\n", (int)cakeQ.size());
+        printf("chef y produced a vanilla-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
         pthread_mutex_unlock(&consoleLock);
 
         //unlock queue 
@@ -120,13 +120,14 @@ void *chef_z(void *arg)
         if(cakeQ.front() == chocolateCake)
         {
             //wait until you can push into the chocolate-cake queue
+            pfs("stuck in reverse ch\n");
             sem_wait(&chocolateEmpty);
         
             cakeQ.pop();
             chocolateQ.push(chocolateCake);
 
             pthread_mutex_lock(&consoleLock);
-            printf("chef z decorated a chocolate-cake and leaving critical region. cake-queue size:%d. chocolate-queue size: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size());
+            printf("chef z decorated a chocolate-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
             pthread_mutex_unlock(&consoleLock);
 
             //chocolate queue can be popped now
@@ -135,6 +136,7 @@ void *chef_z(void *arg)
 
         else
         {
+            pfs("stuck in reverse van\n");
             //wait until you can push into the vanilla-cake queue
             sem_wait(&vanillaEmpty);
             
@@ -142,7 +144,7 @@ void *chef_z(void *arg)
             vanillaQ.push(vanillaCake);
 
             pthread_mutex_lock(&consoleLock);
-            printf("chef z decorated a vanilla-cake and leaving critical region. cake-queue size: %d. vanilla-queue size: %d\n\n", (int)cakeQ.size(), (int)vanillaQ.size());
+            printf("chef z decorated a vanilla-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
             pthread_mutex_unlock(&consoleLock);
 
             //vanilla queue can be popped now
@@ -168,13 +170,13 @@ void *waiter_1(void *arg)
        chocolateQ.pop();
        
        pthread_mutex_lock(&consoleLock);
-       printf("waiter-1 delivered a chocolate-cake and leaving critical region. cake-queue size:%d. chocolate-queue size: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size());
+       printf("waiter-1 delivered a chocolate-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
        pthread_mutex_unlock(&consoleLock);
 
        //a slot in the queue is free 
        sem_post(&chocolateEmpty);
 
-       sleep((rand() % 5) + 1);
+       sleep(1);
    }
 }
 
@@ -190,13 +192,13 @@ void *waiter_2(void *arg)
        vanillaQ.pop();
        
        pthread_mutex_lock(&consoleLock);
-       printf("waiter-2 delivered a vanilla-cake and leaving critical region. cake-queue size:%d. vanilla-queue size: %d\n\n", (int)cakeQ.size(), (int)vanillaQ.size());
+       printf("waiter-2 delivered a vanilla-cake. cake: %d. chocolate-cake: %d. vanilla-cake: %d\n\n", (int)cakeQ.size(), (int)chocolateQ.size(), (int)vanillaQ.size());
        pthread_mutex_unlock(&consoleLock);
 
        //a slot in the queue is free 
-       sem_post(&chocolateEmpty);
+       sem_post(&vanillaEmpty);
 
-       sleep((rand() % 5) + 1);
+       sleep(1);
     }
 }
 
