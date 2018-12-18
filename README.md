@@ -10,3 +10,15 @@ A1: there are some txt files. a file will be the source that will be given as a 
 B1: there is 3 folders with name of country, inside there are cricket player category and pdfs. inside the categories there can be pdfs and txt files where information of player is given in seperate txt files. the task is, for each country, make a txt file and write all the players info.
 
 B2: some directories are given, inside them there are files (.cpp, .c etc.) and directories. the task is to execute all the cpp files e.g. x.cpp->x.exe
+
+# offline-2
+on pthread, semaphore and mutex
+
+# online-2
+on pthread, semaphore and mutex
+
+# xv6
+
+<b>task-1:</b> make a system_call and a user_program to test the system_call. the user_program needs to placed in 'make' file to be compiled 
+
+
