@@ -48,7 +48,10 @@ this would be the function which the user program calls. this function will be m
 
 *** adding a user program in xv6:
 
-the 'Makefile' needs to be edited, there is a 'OBJS=' with all the .o extension files, just add your program there
+the 'Makefile' needs to be edited, there is a 'UPROGS=' with all the files starting with '_', just add your program name there without any extension. e.g- _progname\ here the '\' indicates that it is a multiline code(multiline string or single line comments are written in multiline like this)
+
+then there is a paragraph named 'EXTRA=' here put your program name with extension e.g- progname.c 
+note: there is a '\' after the last name here, write the name before the '\'
 
 then compile with-> 'make clean' -> 'make'
 then use 'make qemu'

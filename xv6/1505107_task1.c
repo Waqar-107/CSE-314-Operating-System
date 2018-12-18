@@ -5,6 +5,6 @@
 int
 main(void)
 {
-	//printf(1, "my student id is: 1505107\n");
+	printf(1, "my student id is: %d\n", waqar_hassan_khan());
 	exit();
 }
