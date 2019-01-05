@@ -7,6 +7,7 @@
 #include "mmu.h"
 #include "proc.h"
 
+
 int
 sys_fork(void)
 {
@@ -95,5 +96,7 @@ sys_uptime(void)
 int
 sys_waqar_hassan_khan(void) 
 {
+  cprintf("name: Waqar Hassan Khan\n");
+  cprintf("date of birth: 15th Aug, 1998\n");
   return 1505107;
 }
