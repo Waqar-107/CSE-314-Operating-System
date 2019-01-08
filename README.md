@@ -35,6 +35,19 @@ When the system call with number 22(in our my case, can be different in yours) i
 * next we define the function prototype in 'syscall.c'
 
 * now implement the function in 'sysproc.c'
+in 'sysproc.c' the actual codes of sys calls are not implemented, instead it checks parameter validity then call some function of same sort and return the value to the user function.
+here we write 
+sys_nameOfFunction(){
+
+	//validation code
+
+	return nameOfFunction();
+
+}
+
+nameOfFunction is implemented in 'proc.c'. 
+
+* define the function name in defs.h
 
 * In order for a user program to call the system call, an interface needs to be added. Therefore, we need to edit the 'usys.S' file where we should add the following line.
 

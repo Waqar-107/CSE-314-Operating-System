@@ -93,10 +93,7 @@ sys_uptime(void)
 
 //first task for xv6
 //making a system call which has the same name as mine and returns my studentID
-int
-sys_waqar_hassan_khan(void) 
+int sys_waqar_hassan_khan(void) 
 {
-  cprintf("name: Waqar Hassan Khan\n");
-  cprintf("date of birth: 15th Aug, 1998\n");
-  return 1505107;
+  return waqar_hassan_khan();
 }
