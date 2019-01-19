@@ -22,13 +22,10 @@ sinit(void)
 
   int i;
   for(i = 0; i < NSOCK; i++)
-    stable.sock[i].currentState = CLOSE, stable.sock[i].dataAvailable = 0;
+    stable.sock[i].currentState = CLOSE, stable.sock[i].dataAvailable = 0, stable.sock[i].localPort = -1;
 
   //unused
-  for(i = 0; i < NPORT)port[i] = 0;
-
-  //intialize LPORT that will be assigned as local-ports
-  LPORT = 0;
+  for(i = 0; i < NPORT; i++) stable.port[i] = 0;
 }
 
 //returns the local port
@@ -59,16 +56,14 @@ listen(int lport) {
       goto LISTENING_STATE;
   }
 
-  if(lport >= NPORT)goto LISTENING_STATE;
-
   //if we have made it to this line that means our desired port is unused
   for(i = 0; i < NSOCK; i++)
   {
     if(stable.sock[i].currentState == CLOSE){
       stable.sock[i].currentState = LISTEN;
       stable.sock[i].localPort = lport;
-      port[lport] = 1;
-      
+      stable.port[lport] = 1;
+      cprintf("%d th index selected for listen, port: %d\n",i, lport);
       ret = 0; 
       stable.sock[i].ownerPID = myproc()->pid;
       
@@ -87,63 +82,93 @@ listen(int lport) {
 
 int
 connect(int rport, const char* host) {
-
-  int i, ret = -1, lcp;
-
-  //lock the stable
+  
   acquire(&stable.lock);
 
-  //check if the port is listening
-  for(i = 0;i < NSOCK; i++) {
-    if(stable.sock[i].currentState == LISTEN && stable.sock[i].localPort == rport) {
-        ret = i;
-        break;
-    }
-  }
-
-  if(ret == -1) goto RET;
-
-  //allot a socket for the connection which is operating in any closed port
-  for(i = 0; i < NSOCK; i++) {
-    if(stable.sock[i].currentState == CLOSE)
+  int i, server_idx = -1, local_port = -1;
+  for(i = 0;i < NSOCK; i++)
+  {
+    if(stable.sock[i].currentState == LISTEN && stable.sock[i].localPort == rport)
     {
-      //get a free port for client
-      lcp = getLocalPort(); cprintf("local port assigned for client: %d\n", lcp);
-      if(lcp == -1)goto RET;
-
-      //imagine that sock[i] is in client machine
-      stable.sock[i].ownerPID = myproc()->pid;
-      stable.sock[i].currentState = CONNECT;
-      stable.sock[i].remotePort = rport;
-      stable.sock[i].localPort = lcp;
-
-      //this is in server machine
-      stable.sock[ret].remotePort = lcp;
-
-      ret = lcp;
+      server_idx = i;
       break;
     }
   }
 
-  RET:
+  if(server_idx){release(&stable.lock); return E_NOTFOUND;}
 
-  //unlock the stable
+  local_port = getLocalPort();
+  if(local_port == -1){release(&stable.lock); return E_NOTFOUND;}
+
+  for(i = 0; i < NSOCK; i++)
+  {
+    if(stable.sock[i].currentState == CLOSE)
+    {
+      //client_idx = i;
+
+      stable.sock[i].currentState = CONNECT;
+      stable.sock[i].localPort = local_port;
+      stable.sock[i].ownerPID = myproc()->pid;
+      stable.sock[i].remotePort =  stable.sock[server_idx].localPort;
+
+      stable.sock[server_idx].remotePort = local_port;
+      stable.sock[server_idx].currentState = CONNECT;
+    }
+  }
+
   release(&stable.lock);
 
-  return ret;
+  return local_port;
 }
 
 int
 send(int lport, const char* data, int n) {
   
-  int i;
-  
-  //lock the stable
+  int i, client_idx = -1, server_idx = -1;
+
+  //acquire lock
   acquire(&stable.lock);
+  
+  //find corresponding local port
+  for(i = 0; i < NSOCK; i++)
+  {
+    if(stable.sock[i].localPort == lport && stable.sock[i].currentState == CONNECT){
+      client_idx = i;
+      break;
+    }
+  }
 
-  for(i = 0; i < )
+  if(client_idx == -1){cprintf("client not found in s\n");release(&stable.lock); return E_NOTFOUND;}
 
-  //unlock the stable
+  //find who is to send
+  for(i = 0; i < NSOCK; i++)
+  {
+    if(stable.sock[i].localPort == stable.sock[client_idx].remotePort && stable.sock[i].currentState == CONNECT){
+      server_idx = i;
+      break;
+    }
+  }
+
+  //port not found
+  if(server_idx == -1){cprintf("server not found in s\n");release(&stable.lock); return E_NOTFOUND;}
+
+  if(myproc()->pid != stable.sock[client_idx].ownerPID){
+    return E_ACCESS_DENIED;
+  }
+
+  if(stable.sock[server_idx].dataAvailable == 1){
+    sleep(&stable.sock[client_idx], &stable.lock);
+    strncpy(stable.sock[server_idx].buffer, data, n);
+    stable.sock[server_idx].dataAvailable = 1;
+  }
+
+  else{
+    //cprintf("%s sent to server\n",data);
+    strncpy(stable.sock[server_idx].buffer, data, n);
+    stable.sock[server_idx].dataAvailable = 1;
+    wakeup(&stable.sock[server_idx]);
+  }
+
   release(&stable.lock);
 
   return 0;
@@ -152,8 +177,42 @@ send(int lport, const char* data, int n) {
 
 int
 recv(int lport, char* data, int n) {
+  
   //lock the stable
   acquire(&stable.lock);
+
+  int i, client_idx = -1;
+
+  //find corresponding local port
+  for(i = 0; i < NSOCK; i++)
+  {
+    //cprintf("%d %d %d\n",i,stable.sock[i].localPort,stable.sock[i].currentState);
+    if(stable.sock[i].localPort == lport && stable.sock[i].currentState == CONNECT){
+      client_idx = i;
+      break;
+    }
+  }
+
+  if(client_idx == -1){release(&stable.lock); return E_NOTFOUND;}
+
+  if(myproc()->pid != stable.sock[client_idx].ownerPID){
+    return E_ACCESS_DENIED;
+  }
+
+  struct socket *temp = &stable.sock[client_idx];
+
+  //wait for data
+  if(stable.sock[client_idx].dataAvailable == 1){
+    strncpy(data, stable.sock[client_idx].buffer, n);
+    stable.sock[client_idx].dataAvailable = 0;
+    wakeup(temp);
+  }
+
+  else{
+    sleep(temp, &stable.lock);
+    strncpy(data, stable.sock[client_idx].buffer, n);
+    stable.sock[client_idx].dataAvailable = 0;
+  }
 
   //unlock the stable
   release(&stable.lock);
@@ -163,17 +222,28 @@ recv(int lport, char* data, int n) {
 
 int
 disconnect(int lport) {
+  
+  int i = 0, ret = E_NOTFOUND, idx = -1;
+  
   //lock the stable
   acquire(&stable.lock);
+
+  for(i = 0; i < NSOCK; i++)
+  {
+    if(stable.sock[i].localPort == lport){
+      stable.sock[i].dataAvailable = 0;
+      stable.port[lport] = 0;
+      stable.sock[i].currentState = CLOSE;
+      ret = 0; idx = i;
+    }
+  }
+
+  if(myproc()->pid != stable.sock[idx].ownerPID){
+    return E_ACCESS_DENIED;
+  }
 
   //unlock the stable
   release(&stable.lock);
 
-  return 0;
+  return ret;
 }
-
-/*
-a socket with port is listening
-if a client comes and wants to connect with it -> they will be connected and the connection state will be CONNECT
-, none other will be able to connect with it 
-*/

@@ -9,7 +9,7 @@ enum sockstate { LISTEN, CONNECT, CLOSE };
 //
 
 struct socket {
-  char buffer[256];
+  char buffer[MX_BUF];
   int dataAvailable, ownerPID;
   int localPort, remotePort;
   enum sockstate currentState;

@@ -11,9 +11,7 @@ sys_listen(void)
 {
   int port = 0;
 
-  //returns 0 on success
-  if(argint(0, &port) < 0)
-    return -1;
+  if(argint(0,&port) < 0) return -1;
 
   return listen(port);
 }
@@ -24,15 +22,13 @@ sys_connect(void)
   int port = 0;
   char *host = 0;
 
-  if(argint(0, &port) < 0)
-    return -1;
+  if(argint(0, &port) < 0) return -1;
+  if(argstr(1, &host) < 0) return -1;
 
-  if(argstr(1, &host) < 0)
-    return -1;
-
-  if(strncmp(host, "127.0.0.0", strlen(host)) != 0 && strncmp(host, "localhost", strlen(host)) != 0)
-    return -1;
-
+  if(strncmp(host,"127.0.0.1",strlen(host))!=0 && strncmp(host,"localhost",strlen(host)) != 0)
+  {
+    return E_INVALID_ARG; // error in port or host
+  }
   return connect(port, host);
 }
 
@@ -42,14 +38,8 @@ sys_send(void)
   int port = 0;
   char* buf = 0;
   int n = 0;
-
-  if(argint(0, &port) < 0)
-    return -1;
-
-  if(argstr(1, &buf) < 0)
-    return -1;
-
-  if(argint(0, &n) < 0)
+  
+  if(argint(0, &port)<0 || argint(2, &n) < 0 || argstr(1, &buf) < 0)
     return -1;
 
   return send(port, buf, n);
@@ -62,13 +52,7 @@ sys_recv(void)
   char* buf = 0;
   int n = 0;
 
-  if(argint(0, &port) < 0)
-    return -1;
-
-  if(argstr(1, &buf) < 0)
-    return -1;
-
-  if(argint(0, &n) < 0)
+  if(argint(0, &port) < 0 || argint(2, &n) < 0 || argstr(1, &buf) < 0)
     return -1;
 
   return recv(port, buf, n);
@@ -79,18 +63,7 @@ sys_disconnect(void)
 {
   int port = 0;
 
-  if(argint(0, &port) < 0)
-    return -1;
+  if(argint(0, &port) < 0) return -1;
 
   return disconnect(port);
 }
-
-/*
-https://stackoverflow.com/questions/27068394/how-to-pass-a-value-into-a-system-call-function-in-xv6
-
-argint(arg_number, reference_to_var_to_save_the_arg)
-argstr()
-
-theses are used to pass data from user-level to kernel level
-
-*/
