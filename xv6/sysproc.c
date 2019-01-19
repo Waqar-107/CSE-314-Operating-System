@@ -7,7 +7,6 @@
 #include "mmu.h"
 #include "proc.h"
 
-
 int
 sys_fork(void)
 {
@@ -89,11 +88,4 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
-}
-
-//first task for xv6
-//making a system call which has the same name as mine and returns my studentID
-int sys_waqar_hassan_khan(void) 
-{
-  return waqar_hassan_khan();
 }

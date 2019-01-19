@@ -16,12 +16,14 @@ OBJS = \
 	pipe.o\
 	proc.o\
 	sleeplock.o\
+	sock.o\
 	spinlock.o\
 	string.o\
 	swtch.o\
 	syscall.o\
 	sysfile.o\
 	sysproc.o\
+	syssock.o\
 	trapasm.o\
 	trap.o\
 	uart.o\
@@ -181,7 +183,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_1505107_task1\
+	_socktest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -251,7 +253,7 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
-	printf.c umalloc.c 1505107_task1.c\
+	printf.c umalloc.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 

@@ -68,3 +68,69 @@ note: there is a '\' after the last name here, write the name before the '\'
 
 then compile with-> 'make clean' -> 'make'
 then use 'make qemu'
+
+
+<b>task-2 : implementing a socket api in xv6</b>
+<b>making a patch</b>
+
+1. clone xv6 - keep it as a repo, not merge with others
+2. make changes
+3. commit changes
+4. run "git show HEAD>patch_xv6_Socket_ROLL"
+5. a patch file named patch_xv6_Socket_ROLL has been created
+
+<b>unpack a patch</b>
+1. git apply patch_file_name
+2. make and make qemu
+
+<b>detail of task 2</b>
+***apply the patch to have the tester code ready to use
+
+The system calls that should be implemented are as follows:
+
+
+// Listen to a local port (parameter). Return 0 for success, negative for failure
+int listen(int);
+
+
+// Connect to remote port and host (parameter). Only "localhost" and "127.0.0.1" as host should be supported. Returns the local port number, if connection was successful. Negative value returned indicate failure.
+int connect(int, const char* host);
+
+
+// Send a buffer to remote host. The local port, buffer, size of data are parameters. Return 0 for success. Negative value for failure. Send blocks, if remote host has not yet read earlier data
+int send(int, const char*, int);
+
+
+// Receive data from remote host. The local port, buffer, size of buffer are parameters. Return 0 for success. Negative value for failure. recv blocks, if no data is available.
+int recv(int, char*, int);
+
+
+// Disconnect (and close) the socket. The local port is parameter.
+int disconnect(int);
+
+
+// Implement the following error codes. These should be available for user level programs, as well as in kernal space, as the defined constants.
+
+//define constants that are available to both the user and kernel
+#define E_NOTFOUND -1025
+#define E_ACCESS_DENIED -1026
+#define E_WRONG_STATE -1027
+#define E_FAIL -1028
+#define E_INVALID_ARG -1029
+
+
+Error checking:
+-------------------
+Parameter issues should return E_INVALID_ARG
+Accessing a socket that is not in the stable should return E_NOTFOUND
+Accessing a socket from wrong process should return E_ACCESS_DENIED
+Attempts to send or receive, when the socket is not connected, should return E_WRONG_STATE
+If no more socket can be opened (limit exceeded), return E_FAIL
+
+(Optional Task) Close the outstanding sockets owned by a process, when process terminates.
+(Optional Task) Modify socktest to demonstrate the above feature
+
+Limitations (Future work):
+--------------------------------
+- Send will block the caller process, until the recepients buffer is empty.
+- Timeout cannot be specified in the recv() call
