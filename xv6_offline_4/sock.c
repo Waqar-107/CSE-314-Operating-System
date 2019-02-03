@@ -22,7 +22,7 @@ sinit(void)
 
   int i;
   for(i = 0; i < NSOCK; i++)
-    stable.sock[i].currentState = CLOSE, stable.sock[i].dataAvailable = 0, stable.sock[i].localPort = -1;
+    stable.sock[i].currentState = CLOSE, stable.sock[i].dataAvailable = 0, stable.sock[i].localPort = -1, stable.sock[i].rev = 0;
 
   //unused
   for(i = 0; i < NPORT; i++) stable.port[i] = 0;
@@ -157,7 +157,7 @@ send(int lport, const char* data, int n) {
   }
 
   if(stable.sock[server_idx].dataAvailable == 1){
-    sleep(&stable.sock[client_idx], &stable.lock);
+    sleep(&stable.sock[server_idx], &stable.lock);
     strncpy(stable.sock[server_idx].buffer, data, n);
     stable.sock[server_idx].dataAvailable = 1;
   }
@@ -203,14 +203,58 @@ recv(int lport, char* data, int n) {
 
   //wait for data
   if(stable.sock[client_idx].dataAvailable == 1){
+
+    //------------------------------------------------------------------------------------
     strncpy(data, stable.sock[client_idx].buffer, n);
+
+    //if rev
+    if(strncmp(data, "reverse", n) == 0){
+      stable.sock[client_idx].rev = 1 - stable.sock[client_idx].rev;
+    }
+
+    //send reverse except quit
+    if(strncmp(data, "exit", n) != 0)
+    {
+      if(stable.sock[client_idx].rev){
+        char temp[strlen(data) + 1]; int j = strlen(data) - 1;
+        
+        for(i = 0; i < n; i++)temp[j--] = stable.sock[client_idx].buffer[i];
+        temp[strlen(data)] = '\0';
+
+        strncpy(data, temp, n);
+      }
+    }
+    //------------------------------------------------------------------------------------
+    
     stable.sock[client_idx].dataAvailable = 0;
     wakeup(temp);
   }
 
   else{
     sleep(temp, &stable.lock);
+    
+    //------------------------------------------------------------------------------------
     strncpy(data, stable.sock[client_idx].buffer, n);
+    
+    //if rev
+    if(strncmp(data, "reverse", n) == 0){
+      stable.sock[client_idx].rev = 1 - stable.sock[client_idx].rev;
+    }
+
+    //send reverse except quit
+    if(strncmp(data, "exit", n) != 0)
+    {
+      if(stable.sock[client_idx].rev){
+        char temp[strlen(data) + 1]; int j = strlen(data) - 1;
+        
+        for(i = 0; i < n; i++)temp[j--] = stable.sock[client_idx].buffer[i];
+        temp[strlen(data)] = '\0';
+
+        strncpy(data, temp, n);
+      }
+    }
+    //------------------------------------------------------------------------------------
+
     stable.sock[client_idx].dataAvailable = 0;
   }
 

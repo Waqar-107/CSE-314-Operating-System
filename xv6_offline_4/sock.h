@@ -13,4 +13,6 @@ struct socket {
   int dataAvailable, ownerPID;
   int localPort, remotePort;
   enum sockstate currentState;
+
+  int rev;
 };
