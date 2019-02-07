@@ -70,7 +70,8 @@ then compile with-> 'make clean' -> 'make'
 then use 'make qemu'
 
 
-<b>task-2 : implementing a socket api in xv6</b>
+<h3>task-2 : implementing a socket api in xv6</h3>
+
 <b>making a patch</b>
 
 1. clone xv6 - keep it as a repo, not merge with others
@@ -120,7 +121,7 @@ int disconnect(int);
 
 
 Error checking:
--------------------
+
 Parameter issues should return E_INVALID_ARG
 Accessing a socket that is not in the stable should return E_NOTFOUND
 Accessing a socket from wrong process should return E_ACCESS_DENIED
@@ -131,6 +132,6 @@ If no more socket can be opened (limit exceeded), return E_FAIL
 (Optional Task) Modify socktest to demonstrate the above feature
 
 Limitations (Future work):
---------------------------------
+
 - Send will block the caller process, until the recepients buffer is empty.
 - Timeout cannot be specified in the recv() call

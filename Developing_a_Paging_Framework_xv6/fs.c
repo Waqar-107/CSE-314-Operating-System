@@ -670,7 +670,10 @@ nameiparent(char *path, char *name)
   return namex(path, 1, name);
 }
 
+//=================================================================================================
 // NEW FOR PAGING
+// FILE FRAMEWORK PROVIDED BY TEACHER
+//=================================================================================================
 
 #include "fcntl.h"
 #define DIGITS 14
