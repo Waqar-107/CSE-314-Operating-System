@@ -164,8 +164,11 @@ bad:
   return -1;
 }
 
+
+//========================================================================
+//mod by rifat sir : previously the function was static, now non-static 
 // Is the directory dp empty except for "." and ".." ?
-static int
+int
 isdirempty(struct inode *dp)
 {
   int off;
@@ -179,6 +182,8 @@ isdirempty(struct inode *dp)
   }
   return 1;
 }
+//========================================================================
+
 
 //PAGEBREAK!
 int
@@ -238,7 +243,10 @@ bad:
   return -1;
 }
 
-static struct inode*
+
+//========================================================================
+//mod by rifat sir : previously the following function was static, now non-static
+struct inode*
 create(char *path, short type, short major, short minor)
 {
   uint off;
@@ -282,6 +290,8 @@ create(char *path, short type, short major, short minor)
 
   return ip;
 }
+//========================================================================
+
 
 int
 sys_open(void)
