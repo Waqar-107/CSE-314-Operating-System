@@ -216,6 +216,52 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
   return 0;
 }
 
+//===============================================
+//insert a new page
+//a doubly linked list implementation of queue
+//pages being inserted at the tail
+void insertNewPage(char *virtual_address)
+{
+  int i;
+  struct proc *curr = myproc();
+
+  for(i = 0; i < MAX_PSYC_PAGES; i++)
+  {
+    if(curr->freePhysicalPages[i].virtual_address == (char*)0x00000000)
+    {
+      curr->freePhysicalPages[i].virtual_address = virtual_address;
+
+      //first element
+      if(i == 0){
+        curr->head = &curr->freePhysicalPages[i];
+        curr->tail = &curr->freePhysicalPages[i];
+
+        curr->freePhysicalPages[i].prev = 0;
+        curr->freePhysicalPages[i].nxt = 0;
+      }
+
+      else{
+        curr->freePhysicalPages[i].prev = curr->tail;
+        curr->freePhysicalPages[i].nxt = 0;
+        curr->tail = &curr->freePhysicalPages[i];
+      }
+
+      curr->pageInPhyMem++;
+      return;
+    }
+  }
+
+  cprintf("unable to insert a new page. pid: %d, pname: %s\n", curr->pid, curr->name);
+  panic("");
+}
+
+
+void swapAndInsert(void)
+{
+  
+}
+//===============================================
+
 // Allocate page tables and physical memory to grow process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
 int
@@ -224,13 +270,27 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *mem;
   uint a;
 
+  //==============================
+  struct physicalPage *newPage;
+  struct proc *curr_proc = myproc();
+  int full = 0;
+  //==============================
+
   if(newsz >= KERNBASE)
     return 0;
   if(newsz < oldsz)
     return oldsz;
 
   a = PGROUNDUP(oldsz);
-  for(; a < newsz; a += PGSIZE){
+  for(; a < newsz; a += PGSIZE)
+  {  
+    //==============================
+    //use FIFO and make place for the new page
+    if(curr_proc->pageInPhyMem >= MAX_PSYC_PAGES){
+      full = 1;
+    }
+    //==============================
+
     mem = kalloc();
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
@@ -244,6 +304,12 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       kfree(mem);
       return 0;
     }
+
+    //==============================
+    //there is place in the physical page
+    if(full == 0)
+      insertNewPage((char*)a);
+    //==============================
   }
   return newsz;
 }

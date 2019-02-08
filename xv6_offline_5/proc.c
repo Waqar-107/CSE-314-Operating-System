@@ -104,6 +104,7 @@ found:
     p->state = UNUSED;
     return 0;
   }
+  
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
@@ -262,14 +263,17 @@ fork(void)
    {
      //cprintf("inside the while\n");
      x = readFromSwapFile(curproc, buff, offset, PGSIZE/2);
+
+     if(writeToSwapFile(np, buff, offset, x) != 0)
+      panic("fork: error while writing the parents swapfile to the childs swapfile");
+     
      offset += x;
+     
      //cprintf("x = %d\n", x);
 
      if(x == 0)break;
    }
   }
-
-  //cprintf("outta if\n");
 
   for(i = 0; i < MAX_PSYC_PAGES; i++){
     np->freePhysicalPages[i].virtual_address = curproc->freePhysicalPages[i].virtual_address;
