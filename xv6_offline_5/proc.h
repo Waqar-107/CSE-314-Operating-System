@@ -34,10 +34,25 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+//==========================================
+#define MAX_PSYC_PAGES 15
+#define MAX_TOTAL_PAGES 30
+
+struct physicalPage{
+  char *virtual_address;
+  struct physicalPage *nxt;
+  struct physicalPage *prev;
+};
+
+struct pageDescription{
+  char *virtual_address;
+};
+//==========================================
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
-  pde_t* pgdir;                // Page table
+  pde_t* pgdir;                // Page table -> pointer to page table directory
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   int pid;                     // Process ID
@@ -50,11 +65,26 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 
-  //========================================================================
+  //==========================================
   //mod by rifat sir
   //Swap file. must initiate with create swap file
-  struct file *swapFile;			//page file
-  //========================================================================
+  struct file *swapFile;			 //page file
+  //==========================================
+
+  //==========================================
+  //extra variables for paging-framework
+  int pageInPhyMem;            //number of pages in the physical memory
+  int pageInSwapFile;          //number of pages in the swap file
+  int pageFaultCnt;            //number of page fault
+  int pagedOutCnt;             //number of pages placed in the swapfile
+
+  //space for pages in the swap-file
+  struct pageDescription swappedPages[MAX_PSYC_PAGES];
+  
+  //space for pages in the physical memory
+  struct physicalPage freePhysicalPages[MAX_PSYC_PAGES];
+  struct physicalPage *head, *tail; 
+  //==========================================
   
 };
 

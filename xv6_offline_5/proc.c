@@ -20,6 +20,14 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+int
+strcmp(const char *p, const char *q)
+{
+  while(*p && *p == *q)
+    p++, q++;
+  return (uchar)*p - (uchar)*q;
+}
+
 void
 pinit(void)
 {
@@ -111,6 +119,31 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  //==========================================
+  //a new process is being created
+  //initiate page-table info
+  p->pageInPhyMem = 0;
+  p->pageInSwapFile = 0;
+  p->pageFaultCnt = 0;
+  p->pagedOutCnt = 0;  
+
+  p->head = 0;
+  p->tail = 0;     
+
+  int i;
+  for(i = 0; i < MAX_PSYC_PAGES; i++){
+    p->freePhysicalPages[i].nxt = 0;
+    p->freePhysicalPages[i].prev = 0;
+    p->freePhysicalPages[i].virtual_address = (char*)0x00000000;
+
+    p->swappedPages[i].virtual_address = (char*)0x00000000;
+  } 
+  //==========================================
+  
+  cprintf("+---------------------------------------------+\n");
+  cprintf("| a new process with pid = %d has been created |\n", p->pid);
+  cprintf("+---------------------------------------------+\n\n");
 
   return p;
 }
@@ -212,6 +245,38 @@ fork(void)
 
   pid = np->pid;
 
+  //==========================================
+  cprintf("current process name : %s\n", curproc->name);
+
+  char buff[PGSIZE/2];
+  int offset = 0, x = 0;
+
+  np->pageInPhyMem = curproc->pageInPhyMem;
+  np->pageInSwapFile = curproc -> pageInSwapFile;
+
+  createSwapFile(np);
+
+  if(strcmp(curproc->name, "init") != 0 && strcmp(curproc->name, "sh") != 0)
+  {
+   while(1)
+   {
+     //cprintf("inside the while\n");
+     x = readFromSwapFile(curproc, buff, offset, PGSIZE/2);
+     offset += x;
+     //cprintf("x = %d\n", x);
+
+     if(x == 0)break;
+   }
+  }
+
+  //cprintf("outta if\n");
+
+  for(i = 0; i < MAX_PSYC_PAGES; i++){
+    np->freePhysicalPages[i].virtual_address = curproc->freePhysicalPages[i].virtual_address;
+    np->swappedPages[i].virtual_address = curproc->swappedPages[i].virtual_address;
+  }
+  //==========================================
+
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
@@ -241,6 +306,12 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
+
+  //==========================================
+  //remove the swap file
+  if(removeSwapFile(curproc) != 0)
+    panic("exit: error while removing swap file");
+  //==========================================
 
   begin_op();
   iput(curproc->cwd);
