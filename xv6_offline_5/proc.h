@@ -39,6 +39,7 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 #define MAX_TOTAL_PAGES 30
 
 struct physicalPage{
+  int used;
   char *virtual_address;
   struct physicalPage *nxt;
   struct physicalPage *prev;

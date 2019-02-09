@@ -17,7 +17,11 @@ exec(char *path, char **argv)
   struct inode *ip;
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
+
   struct proc *curproc = myproc();
+  
+  cprintf("in exec.c pid: %d | pname:%s\n", curproc->pid, curproc->name);
+  createSwapFile(curproc);
 
   begin_op();
 

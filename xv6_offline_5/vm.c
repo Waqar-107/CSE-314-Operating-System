@@ -218,8 +218,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 
 //===============================================
 //insert a new page
-//a doubly linked list implementation of queue
-//pages being inserted at the tail
+//a page is considered as a node, it has pointer to previous and next node
+//head and tail pointers are kept for the sake of reducing time complexity of queue operations
 void insertNewPage(char *virtual_address)
 {
   int i;
@@ -227,8 +227,9 @@ void insertNewPage(char *virtual_address)
 
   for(i = 0; i < MAX_PSYC_PAGES; i++)
   {
-    if(curr->freePhysicalPages[i].virtual_address == (char*)0x00000000)
+    if(curr->freePhysicalPages[i].used == 0)
     {
+      //cprintf("pid: %d | index selected : %d\n", curr->pid, i);
       curr->freePhysicalPages[i].virtual_address = virtual_address;
 
       //first element
@@ -243,10 +244,13 @@ void insertNewPage(char *virtual_address)
       else{
         curr->freePhysicalPages[i].prev = curr->tail;
         curr->freePhysicalPages[i].nxt = 0;
+
         curr->tail = &curr->freePhysicalPages[i];
       }
 
       curr->pageInPhyMem++;
+      curr->freePhysicalPages[i].used = 1;
+
       return;
     }
   }
@@ -271,7 +275,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   uint a;
 
   //==============================
-  struct physicalPage *newPage;
+  //struct physicalPage *newPage;
   struct proc *curr_proc = myproc();
   int full = 0;
   //==============================
@@ -288,6 +292,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     //use FIFO and make place for the new page
     if(curr_proc->pageInPhyMem >= MAX_PSYC_PAGES){
       full = 1;
+      swapAndInsert();
     }
     //==============================
 

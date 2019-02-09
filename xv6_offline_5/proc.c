@@ -124,6 +124,8 @@ found:
   //==========================================
   //a new process is being created
   //initiate page-table info
+  //createSwapFile(p);                          //creates a swap-file for the new proccess
+  
   p->pageInPhyMem = 0;
   p->pageInSwapFile = 0;
   p->pageFaultCnt = 0;
@@ -137,14 +139,15 @@ found:
     p->freePhysicalPages[i].nxt = 0;
     p->freePhysicalPages[i].prev = 0;
     p->freePhysicalPages[i].virtual_address = (char*)0x00000000;
+    p->freePhysicalPages[i].used = 0;
 
     p->swappedPages[i].virtual_address = (char*)0x00000000;
   } 
-  //==========================================
   
   cprintf("+---------------------------------------------+\n");
   cprintf("| a new process with pid = %d has been created |\n", p->pid);
   cprintf("+---------------------------------------------+\n\n");
+  //==========================================
 
   return p;
 }
@@ -255,24 +258,23 @@ fork(void)
   np->pageInPhyMem = curproc->pageInPhyMem;
   np->pageInSwapFile = curproc -> pageInSwapFile;
 
-  createSwapFile(np);
-
   if(strcmp(curproc->name, "init") != 0 && strcmp(curproc->name, "sh") != 0)
   {
-   while(1)
-   {
-     //cprintf("inside the while\n");
-     x = readFromSwapFile(curproc, buff, offset, PGSIZE/2);
+    createSwapFile(np);
+    while(1)
+    {
+      //cprintf("inside the while\n");
+      x = readFromSwapFile(curproc, buff, offset, PGSIZE/2);
 
-     if(writeToSwapFile(np, buff, offset, x) != 0)
-      panic("fork: error while writing the parents swapfile to the childs swapfile");
-     
-     offset += x;
-     
-     //cprintf("x = %d\n", x);
+      if(writeToSwapFile(np, buff, offset, x) != 0)
+        panic("fork: error while writing the parents swapfile to the childs swapfile");
+      
+      offset += x;
+      
+      //cprintf("x = %d\n", x);
 
-     if(x == 0)break;
-   }
+      if(x == 0)break;
+    }
   }
 
   for(i = 0; i < MAX_PSYC_PAGES; i++){

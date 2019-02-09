@@ -1,0 +1,19 @@
+========================
+proc.c:
+========================
+allocproc() - finds an empty slot in the ptable, initate things. we initiate our newly added variables here. this is also called from "fork()"
+
+fork() - calls allocproc, creates a child process. here we  copy parents swap in childs swapfile
+
+
+========================
+exec.c: loads program in memory
+========================
+exec() - uses allocuvm() that inserts page in the pagetable
+
+
+
+
+
+1. we call "createSwapFile" in "exec.c" so that we can have swap-files for procs "sh" and "init"
+and in fork for other processes.  

@@ -789,7 +789,7 @@ createSwapFile(struct proc* p)
 	p->swapFile->writable = O_RDWR;
     end_op();
 
-  cprintf("successfully created swapfile for the proc : %s\n", p->name);
+  cprintf("successfully created swapfile for the proc, pname : %s, pid : %d\n", p->name, p->pid);
   return 0;
 }
 
