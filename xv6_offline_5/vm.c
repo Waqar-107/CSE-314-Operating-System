@@ -224,16 +224,15 @@ void insertNewPage(char *virtual_address)
 {
   int i;
   struct proc *curr = myproc();
-
+ 
   for(i = 0; i < MAX_PSYC_PAGES; i++)
   {
     if(curr->freePhysicalPages[i].used == 0)
     {
-      //cprintf("pid: %d | index selected : %d\n", curr->pid, i);
       curr->freePhysicalPages[i].virtual_address = virtual_address;
 
       //first element
-      if(i == 0){
+      if(curr->head == 0){
         curr->head = &curr->freePhysicalPages[i];
         curr->tail = &curr->freePhysicalPages[i];
 
@@ -242,6 +241,7 @@ void insertNewPage(char *virtual_address)
       }
 
       else{
+        curr->tail->nxt = &curr->freePhysicalPages[i];
         curr->freePhysicalPages[i].prev = curr->tail;
         curr->freePhysicalPages[i].nxt = 0;
 
@@ -260,9 +260,52 @@ void insertNewPage(char *virtual_address)
 }
 
 
-void swapAndInsert(void)
+//insert the head of the queue in the file
+//then make it free
+//finally insert the new one in the empty place which is now the tail
+void swapPage(void)
 {
+  int i;
+  struct proc *curr = myproc();
   
+  //find a place for swapfile
+  for(i = 0; i < MAX_PSYC_PAGES; i++)
+  {
+    if(curr->swappedPages[i].used == 0)
+    {
+      //if head is null
+      if(curr->head == 0)
+        panic("\n\n***head of the queue is null***\n\n");
+
+      //save the address in the disk
+      curr->swappedPages[i].virtual_address = curr->head->virtual_address;
+      curr->swappedPages[i].used = 1;
+
+      //the physical page is ready to use
+      curr->head->used = 0;
+      
+      //update the nodes in front of me and behind me!!
+      if(curr->head->prev)
+        curr->head->prev->nxt = curr->head->nxt;
+      if(curr->head->nxt)
+        curr->head->nxt->prev = curr->head->prev;
+
+      curr->head = curr->head->nxt;
+      
+      //if head is pointing to null now -> the queue is empty
+      if(curr->head == 0)
+        curr->tail = 0;
+
+      //write in the file
+      writeToSwapFile(curr, (char*)PTE_ADDR(curr->swappedPages[i].virtual_address), i * PGSIZE, PGSIZE);
+
+      cprintf("a page has been swapped\n");
+      return;
+    }
+  }
+
+  cprintf("in swap-file | unable to insert a new page. pid: %d, pname: %s\n", curr->pid, curr->name);
+  panic("");
 }
 //===============================================
 
@@ -275,9 +318,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   uint a;
 
   //==============================
-  //struct physicalPage *newPage;
   struct proc *curr_proc = myproc();
-  int full = 0;
   //==============================
 
   if(newsz >= KERNBASE)
@@ -288,20 +329,14 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   a = PGROUNDUP(oldsz);
   for(; a < newsz; a += PGSIZE)
   {  
-    //==============================
-    //use FIFO and make place for the new page
-    if(curr_proc->pageInPhyMem >= MAX_PSYC_PAGES){
-      full = 1;
-      swapAndInsert();
-    }
-    //==============================
-
     mem = kalloc();
+    
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
+    
     memset(mem, 0, PGSIZE);
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
@@ -311,8 +346,12 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     }
 
     //==============================
+    //use FIFO and make place for the new page
+    if(curr_proc->pageInPhyMem >= MAX_PSYC_PAGES)
+      swapPage(), insertNewPage((char*)a);
+    
     //there is place in the physical page
-    if(full == 0)
+    else
       insertNewPage((char*)a);
     //==============================
   }

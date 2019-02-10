@@ -20,8 +20,9 @@ exec(char *path, char **argv)
 
   struct proc *curproc = myproc();
   
-  cprintf("in exec.c pid: %d | pname:%s\n", curproc->pid, curproc->name);
+  //=============================================
   createSwapFile(curproc);
+  //=============================================
 
   begin_op();
 

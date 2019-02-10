@@ -35,6 +35,7 @@ struct context {
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 //==========================================
+//defines and data structures
 #define MAX_PSYC_PAGES 15
 #define MAX_TOTAL_PAGES 30
 
@@ -43,9 +44,11 @@ struct physicalPage{
   char *virtual_address;
   struct physicalPage *nxt;
   struct physicalPage *prev;
+  int dbg;
 };
 
 struct pageDescription{
+  int used;
   char *virtual_address;
 };
 //==========================================
@@ -77,7 +80,6 @@ struct proc {
   int pageInPhyMem;            //number of pages in the physical memory
   int pageInSwapFile;          //number of pages in the swap file
   int pageFaultCnt;            //number of page fault
-  int pagedOutCnt;             //number of pages placed in the swapfile
 
   //space for pages in the swap-file
   struct pageDescription swappedPages[MAX_PSYC_PAGES];

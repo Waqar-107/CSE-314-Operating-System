@@ -13,7 +13,7 @@ void parent() {
 
 int main(int argc, char *argv[])
 {
-  if (0 == fork()) {
+  /*if (0 == fork()) {
     child();
     exit();
   } else {
@@ -21,6 +21,11 @@ int main(int argc, char *argv[])
     // This is the parent process. So, it needs to wait before client terminates
     wait();
     exit();
+  }*/
+
+  int i;
+  for(i=0;i<20;i++){
+    sbrk(2);
   }
 
 	//printf(1,"hello world\n");

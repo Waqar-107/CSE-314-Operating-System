@@ -121,15 +121,13 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
-  //==========================================
+  //=============================================
   //a new process is being created
   //initiate page-table info
-  //createSwapFile(p);                          //creates a swap-file for the new proccess
   
   p->pageInPhyMem = 0;
   p->pageInSwapFile = 0;
   p->pageFaultCnt = 0;
-  p->pagedOutCnt = 0;  
 
   p->head = 0;
   p->tail = 0;     
@@ -141,13 +139,14 @@ found:
     p->freePhysicalPages[i].virtual_address = (char*)0x00000000;
     p->freePhysicalPages[i].used = 0;
 
+    p->swappedPages[i].used = 0;
     p->swappedPages[i].virtual_address = (char*)0x00000000;
   } 
   
   cprintf("+---------------------------------------------+\n");
   cprintf("| a new process with pid = %d has been created |\n", p->pid);
   cprintf("+---------------------------------------------+\n\n");
-  //==========================================
+  //=============================================
 
   return p;
 }
@@ -249,15 +248,27 @@ fork(void)
 
   pid = np->pid;
 
-  //==========================================
-  cprintf("current process name : %s\n", curproc->name);
-
+  //==========================================================================================
   char buff[PGSIZE/2];
   int offset = 0, x = 0;
 
+  //copy all the information
   np->pageInPhyMem = curproc->pageInPhyMem;
-  np->pageInSwapFile = curproc -> pageInSwapFile;
+  np->pageInSwapFile = curproc->pageInSwapFile;
+  np->head = curproc->head;
+  np->tail = curproc->tail;
 
+  for(i = 0; i < MAX_PSYC_PAGES; i++){
+    np->swappedPages[i].used = curproc->swappedPages[i].used;
+    np->swappedPages[i].virtual_address = curproc->swappedPages[i].virtual_address;
+
+    np->freePhysicalPages[i].virtual_address = curproc->freePhysicalPages[i].virtual_address;
+    np->freePhysicalPages[i].used = curproc->freePhysicalPages[i].used;
+    np->freePhysicalPages[i].nxt = curproc->freePhysicalPages[i].nxt;
+    np->freePhysicalPages[i].prev = curproc->freePhysicalPages[i].prev;
+  }
+
+  //copy the content of the file
   if(strcmp(curproc->name, "init") != 0 && strcmp(curproc->name, "sh") != 0)
   {
     createSwapFile(np);
@@ -276,12 +287,7 @@ fork(void)
       if(x == 0)break;
     }
   }
-
-  for(i = 0; i < MAX_PSYC_PAGES; i++){
-    np->freePhysicalPages[i].virtual_address = curproc->freePhysicalPages[i].virtual_address;
-    np->swappedPages[i].virtual_address = curproc->swappedPages[i].virtual_address;
-  }
-  //==========================================
+  //==========================================================================================
 
   acquire(&ptable.lock);
 
