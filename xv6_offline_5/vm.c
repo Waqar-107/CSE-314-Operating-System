@@ -290,6 +290,7 @@ void swapPage(void)
       if(curr->head->nxt)
         curr->head->nxt->prev = curr->head->prev;
 
+      char *virtual_address = curr->head->virtual_address;
       curr->head = curr->head->nxt;
       
       //if head is pointing to null now -> the queue is empty
@@ -300,6 +301,14 @@ void swapPage(void)
       writeToSwapFile(curr, (char*)PTE_ADDR(curr->swappedPages[i].virtual_address), i * PGSIZE, PGSIZE);
 
       cprintf("a page has been swapped\n");
+
+      //find the page table entry and free it from physical memory of xv6
+      pte_t *temp = walkpgdir(curr->pgdir, (void*)virtual_address, 0);
+      if(!*temp)
+        panic("inside vm.c/swapPage, page entry not found");
+
+      kfree((char*)PTE_ADDR(P2V_WO(*walkpgdir(curr->pgdir, virtual_address, 0))));
+
       return;
     }
   }

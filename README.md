@@ -135,3 +135,7 @@ Limitations (Future work):
 
 - Send will block the caller process, until the recepients buffer is empty.
 - Timeout cannot be specified in the recv() call
+
+<h3>task-3 : implementing paging for xv6</h3>
+
+task spec. is in the slides, partially completed

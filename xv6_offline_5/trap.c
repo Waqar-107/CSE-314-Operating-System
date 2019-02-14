@@ -82,6 +82,9 @@ trap(struct trapframe *tf)
     //===========================================
     //page fault handler
     case T_PGFLT:
+
+      
+
       cprintf("\n\n***GOT A PAGE FAULT***\n\n");
       exit();
       break;
